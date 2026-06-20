@@ -1,4 +1,9 @@
-export const coupleSlideshowConfig = [
+export type CoupleSlideshowItem = {
+  title: string;
+  imageUrl: string;
+};
+
+export const coupleSlideshowConfig: CoupleSlideshowItem[] = [
   {
     title: "Detik Bersama",
     imageUrl: "/images/slideshow/couple-1.jpg",
@@ -11,4 +16,4 @@ export const coupleSlideshowConfig = [
     title: "Menuju Hari Bahagia",
     imageUrl: "/images/slideshow/couple-3.jpg",
   },
-] as const;
+];

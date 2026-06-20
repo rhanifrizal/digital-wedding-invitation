@@ -45,6 +45,10 @@ export function CoupleSlideshowSection() {
 
   const currentSlide = coupleSlideshowConfig[activeIndex];
 
+  if (!currentSlide) {
+    return null;
+  }
+
   const goToPreviousSlide = () => {
     setActiveIndex((current) =>
       current === 0 ? coupleSlideshowConfig.length - 1 : current - 1,
