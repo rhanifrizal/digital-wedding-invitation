@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react";
 import { Heart } from "lucide-react";
+import { FloatingParticles } from "@/components/shared/FloatingParticles";
 import { weddingConfig } from "@/config/wedding.config";
 
 type HeroSectionProps = {
@@ -40,6 +41,8 @@ export function HeroSection({ isOpened, onOpenInvitation }: HeroSectionProps) {
         }}
       />
 
+      <FloatingParticles count={36} />
+    
       <motion.div
         initial={{ opacity: 0, y: 28 }}
         animate={{ opacity: 1, y: 0 }}
