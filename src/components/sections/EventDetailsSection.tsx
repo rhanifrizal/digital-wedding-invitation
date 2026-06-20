@@ -1,10 +1,19 @@
+"use client";
+
+import { motion } from "motion/react";
 import { weddingConfig } from "@/config/wedding.config";
 import { SectionTitle } from "@/components/shared/SectionTitle";
 
 export function EventDetailsSection() {
   return (
     <section className="px-6 py-16">
-      <div className="mx-auto max-w-md rounded-[2rem] border border-[#ead8bc] bg-white/65 p-6 shadow-[0_20px_70px_rgba(88,63,38,0.1)] backdrop-blur">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.35 }}
+        transition={{ duration: 0.7, ease: "easeOut" }}
+        className="mx-auto max-w-md rounded-[2rem] border border-[#ead8bc] bg-white/65 p-6 shadow-[0_20px_70px_rgba(88,63,38,0.1)] backdrop-blur"
+      >
         <SectionTitle eyebrow="Event Details" title="Jemputan Majlis" />
 
         <div className="mt-8 space-y-5 text-left">
@@ -30,7 +39,7 @@ export function EventDetailsSection() {
             </p>
           </div>
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }

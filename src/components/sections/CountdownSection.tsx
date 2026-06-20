@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { weddingConfig } from "@/config/wedding.config";
 import { SectionTitle } from "@/components/shared/SectionTitle";
@@ -63,7 +64,13 @@ export function CountdownSection() {
 
   return (
     <section className="px-6 py-16">
-      <div className="mx-auto max-w-md">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.35 }}
+        transition={{ duration: 0.7, ease: "easeOut" }}
+        className="mx-auto max-w-md"
+      >
         <SectionTitle
           eyebrow="Countdown"
           title="Menghitung Hari"
@@ -71,9 +78,17 @@ export function CountdownSection() {
         />
 
         <div className="mt-8 grid grid-cols-4 gap-3">
-          {items.map((item) => (
-            <div
+          {items.map((item, index) => (
+            <motion.div
               key={item.label}
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{
+                delay: index * 0.08,
+                duration: 0.55,
+                ease: "easeOut",
+              }}
               className="rounded-3xl border border-[#ead8bc] bg-white/70 px-3 py-5 text-center shadow-[0_18px_55px_rgba(88,63,38,0.08)] backdrop-blur"
             >
               <p className="font-serif text-3xl text-[#2f2a25]">
@@ -82,10 +97,10 @@ export function CountdownSection() {
               <p className="mt-2 text-xs uppercase tracking-[0.18em] text-[#9c7a4d]">
                 {item.label}
               </p>
-            </div>
+            </motion.div>
           ))}
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }
