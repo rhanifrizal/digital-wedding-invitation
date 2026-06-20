@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "motion/react";
 import { Heart } from "lucide-react";
 import { timelineConfig } from "@/config/timeline.config";
@@ -52,13 +53,17 @@ export function TimelineSection() {
                     <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-[#efd4d0]/35 blur-2xl transition duration-300 group-hover:bg-[#efd4d0]/50" />
 
                     {item.imageUrl ? (
-                      <div className="relative mb-4 overflow-hidden rounded-[1.25rem] border border-[#ead8bc] bg-white">
-                        <img
-                          src={item.imageUrl}
-                          alt={item.title}
-                          className="h-44 w-full object-cover transition duration-500 group-hover:scale-105"
-                        />
-                      </div>
+                        <div className="relative mb-4 overflow-hidden rounded-[1.25rem] border border-[#ead8bc] bg-white">
+                            <div className="relative h-44 w-full overflow-hidden">
+                            <Image
+                                src={item.imageUrl}
+                                alt={item.title}
+                                fill
+                                sizes="(max-width: 768px) 100vw, 384px"
+                                className="object-cover transition duration-500 group-hover:scale-105"
+                            />
+                            </div>
+                        </div>
                     ) : null}
 
                     <div className="relative z-10">

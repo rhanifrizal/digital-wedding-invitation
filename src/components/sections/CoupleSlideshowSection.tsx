@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronLeft, ChevronRight, ImageIcon } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -31,12 +32,16 @@ function SlideshowImage({ imageUrl, title }: SlideshowImageProps) {
   }
 
   return (
-    <img
-      src={imageUrl}
-      alt={title}
-      onError={() => setHasError(true)}
-      className="h-[28rem] w-full rounded-[1.75rem] object-cover"
-    />
+    <div className="relative h-[28rem] w-full overflow-hidden rounded-[1.75rem]">
+        <Image
+        src={imageUrl}
+        alt={title}
+        fill
+        sizes="(max-width: 768px) 100vw, 768px"
+        onError={() => setHasError(true)}
+        className="object-cover"
+        />
+    </div>
   );
 }
 
