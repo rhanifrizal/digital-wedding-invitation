@@ -10,6 +10,7 @@ import {
 import { useState } from "react";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { CountdownSection } from "@/components/sections/CountdownSection";
+import { TimelineSection } from "@/components/sections/TimelineSection";
 import { EventDetailsSection } from "@/components/sections/EventDetailsSection";
 import { BottomSheet } from "@/components/shared/BottomSheet";
 import { LocationSheet } from "@/components/bottom-sheets/LocationSheet";
@@ -70,6 +71,7 @@ export default function Home() {
     <main className="min-h-screen bg-[#fdf8f1] pb-28 text-[#2f2a25]">
       <HeroSection />
       <CountdownSection />
+      <TimelineSection />
       <EventDetailsSection />
 
       <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-[#e8d9c4] bg-[#fffaf3]/90 px-4 py-3 shadow-[0_-10px_40px_rgba(88,63,38,0.12)] backdrop-blur-xl">
