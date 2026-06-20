@@ -7,6 +7,7 @@ type GuestbookMessage = {
   id: string;
   name: string;
   message: string;
+  is_visible?: boolean;
   created_at: string;
 };
 
@@ -78,43 +79,112 @@ export function GuestbookSheet() {
     fetchMessages(currentPage + 1, true);
   };
 
+  const syncVisibleMessages = async () => {
+    const currentLimit = Math.max(messages.length, MESSAGE_PAGE_SIZE);
+
+    const { data, error } = await supabase
+        .from("guestbook_messages")
+        .select("id, name, message, created_at")
+        .eq("is_visible", true)
+        .order("created_at", { ascending: false })
+        .range(0, currentLimit - 1);
+
+    if (error) {
+        return;
+    }
+
+    setMessages(data ?? []);
+    setHasMoreMessages((data ?? []).length === currentLimit);
+  };
+
   useEffect(() => {
     fetchMessages();
   }, []);
 
   useEffect(() => {
     const channel = supabase
-      .channel("guestbook-messages-realtime")
-      .on(
+        .channel("guestbook-messages-realtime")
+        .on(
         "postgres_changes",
         {
-          event: "INSERT",
-          schema: "public",
-          table: "guestbook_messages",
-          filter: "is_visible=eq.true",
+            event: "INSERT",
+            schema: "public",
+            table: "guestbook_messages",
         },
         (payload) => {
-          const newMessage = payload.new as GuestbookMessage;
+            const newMessage = payload.new as GuestbookMessage & {
+            is_visible?: boolean;
+            };
 
-          setMessages((current) => {
+            if (newMessage.is_visible === false) return;
+
+            setMessages((current) => {
             const alreadyExists = current.some(
-              (item) => item.id === newMessage.id,
+                (item) => item.id === newMessage.id,
             );
 
             if (alreadyExists) {
-              return current;
+                return current;
             }
 
             return [newMessage, ...current];
-          });
+            });
         },
-      )
-      .subscribe();
+        )
+        .on(
+        "postgres_changes",
+        {
+            event: "UPDATE",
+            schema: "public",
+            table: "guestbook_messages",
+        },
+        (payload) => {
+            const updatedMessage = payload.new as GuestbookMessage & {
+            is_visible?: boolean;
+            };
+
+            setMessages((current) => {
+            if (updatedMessage.is_visible === false) {
+                return current.filter((item) => item.id !== updatedMessage.id);
+            }
+
+            const alreadyExists = current.some(
+                (item) => item.id === updatedMessage.id,
+            );
+
+            if (alreadyExists) {
+                return current.map((item) =>
+                item.id === updatedMessage.id
+                    ? {
+                        id: updatedMessage.id,
+                        name: updatedMessage.name,
+                        message: updatedMessage.message,
+                        created_at: updatedMessage.created_at,
+                    }
+                    : item,
+                );
+            }
+
+            return [updatedMessage, ...current];
+            });
+        },
+        )
+        .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+        supabase.removeChannel(channel);
     };
   }, []);
+
+  useEffect(() => {
+    const syncTimer = window.setInterval(() => {
+        syncVisibleMessages();
+    }, 5000);
+
+    return () => {
+        window.clearInterval(syncTimer);
+    };
+  }, [messages.length]);
 
   const handleSubmit = async () => {
     setSuccessMessage("");
