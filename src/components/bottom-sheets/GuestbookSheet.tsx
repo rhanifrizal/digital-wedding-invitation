@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 
@@ -316,32 +317,47 @@ export function GuestbookSheet() {
           </div>
         ) : (
           <>
-            {messages.map((item) => (
-              <div
-                key={item.id}
-                className="rounded-3xl border border-[#ead8bc] bg-white/70 p-5"
-              >
-                <p className="font-medium text-[#2f2a25]">{item.name}</p>
-                <p className="mt-2 text-sm leading-6 text-[#7a6b5e]">
-                  {item.message}
-                </p>
-              </div>
-            ))}
+            <AnimatePresence initial={false}>
+                {messages.map((item) => (
+                    <motion.div
+                    key={item.id}
+                    layout
+                    initial={{ opacity: 0, y: -10, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.96 }}
+                    transition={{
+                        duration: 0.25,
+                        ease: "easeOut",
+                        layout: {
+                        duration: 0.25,
+                        },
+                    }}
+                    className="rounded-3xl border border-[#ead8bc] bg-white/70 p-5"
+                    >
+                    <p className="font-medium text-[#2f2a25]">{item.name}</p>
+                    <p className="mt-2 text-sm leading-6 text-[#7a6b5e]">
+                        {item.message}
+                    </p>
+                    </motion.div>
+                ))}
+            </AnimatePresence>
 
-            {hasMoreMessages ? (
-              <button
-                type="button"
-                onClick={handleLoadMore}
-                disabled={isLoadingMore}
-                className="w-full rounded-2xl border border-[#d8b989] bg-white px-4 py-3 text-sm font-medium text-[#2f2a25] transition hover:bg-[#f3e5d3] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isLoadingMore ? "Memuatkan..." : "Lihat Lagi Ucapan"}
-              </button>
-            ) : (
-              <p className="text-center text-xs text-[#9c7a4d]">
-                Semua ucapan telah dipaparkan.
-              </p>
-            )}
+            <motion.div layout>
+                {hasMoreMessages ? (
+                    <button
+                    type="button"
+                    onClick={handleLoadMore}
+                    disabled={isLoadingMore}
+                    className="w-full rounded-2xl border border-[#d8b989] bg-white px-4 py-3 text-sm font-medium text-[#2f2a25] transition hover:bg-[#f3e5d3] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                    {isLoadingMore ? "Memuatkan..." : "Lihat Lagi Ucapan"}
+                    </button>
+                ) : (
+                    <p className="text-center text-xs text-[#9c7a4d]">
+                    Semua ucapan telah dipaparkan.
+                    </p>
+                )}
+            </motion.div>
           </>
         )}
       </div>
