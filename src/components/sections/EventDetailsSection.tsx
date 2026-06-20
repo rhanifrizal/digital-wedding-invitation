@@ -1,10 +1,14 @@
 "use client";
 
 import { motion } from "motion/react";
+import { CalendarPlus } from "lucide-react";
 import { weddingConfig } from "@/config/wedding.config";
 import { SectionTitle } from "@/components/shared/SectionTitle";
+import { getGoogleCalendarUrl } from "@/lib/calendar";
 
 export function EventDetailsSection() {
+  const googleCalendarUrl = getGoogleCalendarUrl();
+
   return (
     <section className="px-6 py-16">
       <motion.div
@@ -39,6 +43,16 @@ export function EventDetailsSection() {
             </p>
           </div>
         </div>
+
+        <a
+          href={googleCalendarUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-7 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#2f2a25] px-5 py-4 text-sm font-medium text-white shadow-[0_18px_45px_rgba(47,42,37,0.18)] transition hover:-translate-y-0.5 hover:bg-[#4a3b31]"
+        >
+          <CalendarPlus className="h-4 w-4" />
+          Add to Calendar
+        </a>
       </motion.div>
     </section>
   );

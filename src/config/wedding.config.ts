@@ -13,6 +13,7 @@ export const weddingConfig = {
 
   event: {
     date: "2026-10-25T18:00:00+08:00",
+    endDate: "2026-10-25T23:00:00+08:00",
     displayDate: "Ahad, 25 October 2026",
     time: "6:00 petang - 11:00 malam",
     venueName: "Dewan Majlis",
