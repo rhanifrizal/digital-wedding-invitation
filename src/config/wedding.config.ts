@@ -19,9 +19,21 @@ export const weddingConfig = {
     address: "Alamat majlis akan dikemaskini",
   },
 
+  location: {
+    googleMapsUrl: "https://maps.google.com",
+    wazeUrl: "https://waze.com/ul",
+  },
+
   calendar: {
     title: "Walimatul Urus Hanif & Fatihah",
     description: "Majlis perkahwinan Hanif & Fatihah",
+  },
+
+  moneyGift: {
+    bankName: "Maybank",
+    accountHolder: "Raja Muhammad Hanif",
+    accountNumber: "1234567890",
+    qrImageUrl: "",
   },
 
   contact: {
