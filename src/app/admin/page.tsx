@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { useCallback, useEffect, useState } from "react";
 
 type RSVP = {
   id: string;
@@ -45,28 +46,52 @@ export default function AdminPage() {
   const [adminPassword, setAdminPassword] = useState("");
   const [data, setData] = useState<AdminData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAutoSyncing, setIsAutoSyncing] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const loadDashboard = async (passwordToUse = adminPassword) => {
-    setIsLoading(true);
-    setErrorMessage("");
+  const loadDashboard = useCallback(
+    async (passwordToUse = adminPassword, isSilent = false) => {
+      if (!passwordToUse) return;
 
-    const response = await fetch("/api/admin/dashboard", {
-      headers: {
-        "x-admin-password": passwordToUse,
-      },
-    });
+      if (isSilent) {
+        setIsAutoSyncing(true);
+      } else {
+        setIsLoading(true);
+      }
 
-    setIsLoading(false);
+      setErrorMessage("");
 
-    if (!response.ok) {
-      setErrorMessage("Password salah atau data tidak dapat dimuatkan.");
-      return;
-    }
+      const response = await fetch("/api/admin/dashboard", {
+        headers: {
+          "x-admin-password": passwordToUse,
+        },
+      });
 
-    const result = (await response.json()) as AdminData;
-    setData(result);
-  };
+      setIsLoading(false);
+      setIsAutoSyncing(false);
+
+      if (!response.ok) {
+        setErrorMessage("Password salah atau data tidak dapat dimuatkan.");
+        return;
+      }
+
+      const result = (await response.json()) as AdminData;
+      setData(result);
+    },
+    [adminPassword],
+  );
+
+  useEffect(() => {
+    if (!adminPassword || !data) return;
+
+    const syncTimer = window.setInterval(() => {
+      loadDashboard(adminPassword, true);
+    }, 3000);
+
+    return () => {
+      window.clearInterval(syncTimer);
+    };
+  }, [adminPassword, data, loadDashboard]);
 
   const handleLogin = async () => {
     const trimmedPassword = password.trim();
@@ -108,20 +133,21 @@ export default function AdminPage() {
     setData((current) => {
       if (!current) return current;
 
+      const updatedGuestbookMessages = current.guestbookMessages.map((item) =>
+        item.id === messageId
+          ? { ...item, is_visible: nextVisibility }
+          : item,
+      );
+
       return {
         ...current,
         summary: {
           ...current.summary,
-          totalVisibleGuestbookMessages: current.guestbookMessages.filter(
-            (item) =>
-              item.id === messageId ? nextVisibility : item.is_visible,
+          totalVisibleGuestbookMessages: updatedGuestbookMessages.filter(
+            (item) => item.is_visible,
           ).length,
         },
-        guestbookMessages: current.guestbookMessages.map((item) =>
-          item.id === messageId
-            ? { ...item, is_visible: nextVisibility }
-            : item,
-        ),
+        guestbookMessages: updatedGuestbookMessages,
       };
     });
   };
@@ -129,7 +155,12 @@ export default function AdminPage() {
   if (!data) {
     return (
       <main className="flex min-h-dvh items-center justify-center bg-[#fdf8f1] px-6 text-[#2f2a25]">
-        <div className="w-full max-w-md rounded-[2rem] border border-[#ead8bc] bg-white/75 p-6 shadow-[0_20px_70px_rgba(88,63,38,0.1)]">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: "easeOut" }}
+          className="w-full max-w-md rounded-[2rem] border border-[#ead8bc] bg-white/75 p-6 shadow-[0_20px_70px_rgba(88,63,38,0.1)]"
+        >
           <p className="text-sm uppercase tracking-[0.35em] text-[#9c7a4d]">
             Admin
           </p>
@@ -146,6 +177,11 @@ export default function AdminPage() {
             onChange={(event) => {
               setPassword(event.target.value);
               setErrorMessage("");
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                handleLogin();
+              }
             }}
             placeholder="Admin password"
             className="mt-6 w-full rounded-2xl border border-[#ead8bc] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#b58a54]"
@@ -165,7 +201,7 @@ export default function AdminPage() {
           >
             {isLoading ? "Loading..." : "Login Admin"}
           </button>
-        </div>
+        </motion.div>
       </main>
     );
   }
@@ -182,19 +218,25 @@ export default function AdminPage() {
             <p className="mt-2 text-sm text-[#7a6b5e]">
               RSVP summary and guestbook management.
             </p>
+            <p className="mt-2 text-xs text-[#9c7a4d]">
+              {isAutoSyncing ? "Syncing latest data..." : "Auto-sync enabled"}
+            </p>
           </div>
 
           <button
             type="button"
-            onClick={() => loadDashboard()}
+            onClick={() => loadDashboard(adminPassword)}
             disabled={isLoading}
             className="rounded-2xl border border-[#d8b989] bg-white px-5 py-3 text-sm font-medium transition hover:bg-[#f3e5d3] disabled:opacity-60"
           >
-            {isLoading ? "Refreshing..." : "Refresh Data"}
+            {isLoading ? "Refreshing..." : "Refresh Now"}
           </button>
         </div>
 
-        <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+        <motion.section
+          layout
+          className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6"
+        >
           <SummaryCard label="Total RSVP" value={data.summary.totalRsvp} />
           <SummaryCard label="Hadir" value={data.summary.totalAttending} />
           <SummaryCard
@@ -210,7 +252,7 @@ export default function AdminPage() {
             label="Visible"
             value={data.summary.totalVisibleGuestbookMessages}
           />
-        </section>
+        </motion.section>
 
         {errorMessage ? (
           <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -226,39 +268,52 @@ export default function AdminPage() {
               {data.rsvps.length === 0 ? (
                 <p className="text-sm text-[#7a6b5e]">No RSVP yet.</p>
               ) : (
-                data.rsvps.map((item) => (
-                  <div
-                    key={item.id}
-                    className="rounded-3xl border border-[#ead8bc] bg-[#fffaf3] p-4"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-medium">{item.name}</p>
-                        <p className="mt-1 text-xs text-[#9c7a4d]">
-                          {formatDate(item.created_at)}
-                        </p>
+                <AnimatePresence initial={false}>
+                  {data.rsvps.map((item) => (
+                    <motion.div
+                      key={item.id}
+                      layout
+                      initial={{ opacity: 0, y: -12, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.96 }}
+                      transition={{
+                        duration: 0.25,
+                        ease: "easeOut",
+                        layout: {
+                          duration: 0.25,
+                        },
+                      }}
+                      className="rounded-3xl border border-[#ead8bc] bg-[#fffaf3] p-4"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-medium">{item.name}</p>
+                          <p className="mt-1 text-xs text-[#9c7a4d]">
+                            {formatDate(item.created_at)}
+                          </p>
+                        </div>
+
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${
+                            item.attendance_status === "attending"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {item.attendance_status === "attending"
+                            ? "Hadir"
+                            : "Tidak Hadir"}
+                        </span>
                       </div>
 
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${
-                          item.attendance_status === "attending"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {item.attendance_status === "attending"
-                          ? "Hadir"
-                          : "Tidak Hadir"}
-                      </span>
-                    </div>
-
-                    <div className="mt-3 grid gap-2 text-sm text-[#7a6b5e]">
-                      <p>Pax: {item.pax_count}</p>
-                      {item.phone ? <p>Phone: {item.phone}</p> : null}
-                      {item.message ? <p>Note: {item.message}</p> : null}
-                    </div>
-                  </div>
-                ))
+                      <div className="mt-3 grid gap-2 text-sm text-[#7a6b5e]">
+                        <p>Pax: {item.pax_count}</p>
+                        {item.phone ? <p>Phone: {item.phone}</p> : null}
+                        {item.message ? <p>Note: {item.message}</p> : null}
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               )}
             </div>
           </div>
@@ -268,47 +323,66 @@ export default function AdminPage() {
 
             <div className="mt-5 max-h-[36rem] space-y-3 overflow-y-auto pr-1">
               {data.guestbookMessages.length === 0 ? (
-                <p className="text-sm text-[#7a6b5e]">No guestbook messages yet.</p>
+                <p className="text-sm text-[#7a6b5e]">
+                  No guestbook messages yet.
+                </p>
               ) : (
-                data.guestbookMessages.map((item) => (
-                  <div
-                    key={item.id}
-                    className="rounded-3xl border border-[#ead8bc] bg-[#fffaf3] p-4"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-medium">{item.name}</p>
-                        <p className="mt-1 text-xs text-[#9c7a4d]">
-                          {formatDate(item.created_at)}
-                        </p>
+                <AnimatePresence initial={false}>
+                  {data.guestbookMessages.map((item) => (
+                    <motion.div
+                      key={item.id}
+                      layout
+                      initial={{ opacity: 0, y: -12, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.96 }}
+                      transition={{
+                        duration: 0.25,
+                        ease: "easeOut",
+                        layout: {
+                          duration: 0.25,
+                        },
+                      }}
+                      className={`rounded-3xl border p-4 transition-colors ${
+                        item.is_visible
+                          ? "border-[#ead8bc] bg-[#fffaf3]"
+                          : "border-neutral-200 bg-neutral-100"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-medium">{item.name}</p>
+                          <p className="mt-1 text-xs text-[#9c7a4d]">
+                            {formatDate(item.created_at)}
+                          </p>
+                        </div>
+
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${
+                            item.is_visible
+                              ? "bg-green-100 text-green-700"
+                              : "bg-neutral-200 text-neutral-600"
+                          }`}
+                        >
+                          {item.is_visible ? "Visible" : "Hidden"}
+                        </span>
                       </div>
 
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${
-                          item.is_visible
-                            ? "bg-green-100 text-green-700"
-                            : "bg-neutral-200 text-neutral-600"
-                        }`}
+                      <p className="mt-3 text-sm leading-6 text-[#7a6b5e]">
+                        {item.message}
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          toggleGuestbookVisibility(item.id, item.is_visible)
+                        }
+                        className="mt-4 rounded-2xl border border-[#d8b989] bg-white px-4 py-2 text-sm font-medium transition hover:bg-[#f3e5d3]"
                       >
-                        {item.is_visible ? "Visible" : "Hidden"}
-                      </span>
-                    </div>
-
-                    <p className="mt-3 text-sm leading-6 text-[#7a6b5e]">
-                      {item.message}
-                    </p>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        toggleGuestbookVisibility(item.id, item.is_visible)
-                      }
-                      className="mt-4 rounded-2xl border border-[#d8b989] bg-white px-4 py-2 text-sm font-medium transition hover:bg-[#f3e5d3]"
-                    >
-                      {item.is_visible ? "Hide Message" : "Show Message"}
-                    </button>
-                  </div>
-                ))
+                        {item.is_visible ? "Hide Message" : "Show Message"}
+                      </button>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               )}
             </div>
           </div>
@@ -320,11 +394,25 @@ export default function AdminPage() {
 
 function SummaryCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-3xl border border-[#ead8bc] bg-white/75 p-5 shadow-[0_16px_50px_rgba(88,63,38,0.08)]">
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      className="rounded-3xl border border-[#ead8bc] bg-white/75 p-5 shadow-[0_16px_50px_rgba(88,63,38,0.08)]"
+    >
       <p className="text-xs uppercase tracking-[0.2em] text-[#9c7a4d]">
         {label}
       </p>
-      <p className="mt-3 font-serif text-3xl">{value}</p>
-    </div>
+      <motion.p
+        key={value}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+        className="mt-3 font-serif text-3xl"
+      >
+        {value}
+      </motion.p>
+    </motion.div>
   );
 }
