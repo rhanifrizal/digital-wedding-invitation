@@ -23,6 +23,7 @@ import { CoupleSlideshowSection } from "@/components/sections/CoupleSlideshowSec
 import { GuestPhotoUploadSection } from "@/components/sections/GuestPhotoUploadSection";
 import { MusicPlayer } from "@/components/shared/MusicPlayer";
 import { SectionDivider } from "@/components/shared/SectionDivider";
+import { DecorativeSection } from "@/components/shared/DecorativeSection";
 
 type BottomActionKey = "location" | "rsvp" | "gift" | "guestbook" | "contact";
 
@@ -105,21 +106,44 @@ export default function Home() {
         onOpenInvitation={handleOpenInvitation}
       />
       <MusicPlayer shouldPlay={isInvitationOpened} />
+
       {isInvitationOpened ? (
         <>
           <div ref={countdownRef}>
-            <CountdownSection />
+            <DecorativeSection className="pt-8 sm:pt-10">
+              <CountdownSection />
+            </DecorativeSection>
           </div>
+
           <SectionDivider />
-          <TimelineSection />
+
+          <DecorativeSection>
+            <TimelineSection />
+          </DecorativeSection>
+
           <SectionDivider />
-          <CoupleSlideshowSection />
+
+          <DecorativeSection>
+            <CoupleSlideshowSection />
+          </DecorativeSection>
+
           <SectionDivider />
-          <EventDetailsSection />
+
+          <DecorativeSection>
+            <EventDetailsSection />
+          </DecorativeSection>
+
           <SectionDivider />
-          <GuestPhotoUploadSection />
+
+          <DecorativeSection>
+            <GuestPhotoUploadSection />
+          </DecorativeSection>
+
           <SectionDivider />
-          <FAQSection />
+
+          <DecorativeSection className="pb-8">
+            <FAQSection />
+          </DecorativeSection>
         </>
       ) : null}
 

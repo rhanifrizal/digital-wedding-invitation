@@ -63,7 +63,7 @@ export function CountdownSection() {
   ];
 
   return (
-    <section className="px-6 py-16">
+    <section>
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
