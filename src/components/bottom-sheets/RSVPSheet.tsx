@@ -51,11 +51,17 @@ export function RSVPSheet() {
 
     const trimmedName = form.name.trim();
     const trimmedPhone = form.phone.trim();
+    const normalizedPhone = trimmedPhone.replace(/\D/g, "");
     const trimmedMessage = form.message.trim();
     const paxCount = Number(form.paxCount);
 
     if (!trimmedName) {
       setErrorMessage("Sila masukkan nama.");
+      return;
+    }
+
+    if (normalizedPhone.length < 10 || normalizedPhone.length > 11) {
+      setErrorMessage("Nombor telefon mesti mempunyai 10 hingga 11 digit.");
       return;
     }
 
@@ -73,7 +79,7 @@ export function RSVPSheet() {
 
     const { error } = await supabase.from("rsvps").insert({
       name: trimmedName,
-      phone: trimmedPhone || null,
+      phone: normalizedPhone,
       attendance_status: form.attendanceStatus,
       pax_count: form.attendanceStatus === "attending" ? paxCount : 0,
       message: trimmedMessage || null,
@@ -109,9 +115,16 @@ export function RSVPSheet() {
         </label>
         <input
           type="tel"
+          inputMode="numeric"
+          pattern="[0-9]*"
           value={form.phone}
-          onChange={(event) => updateForm("phone", event.target.value)}
+          onChange={(event) => {
+            const digitsOnly = event.target.value.replace(/\D/g, "");
+            updateForm("phone", digitsOnly);
+          }}
           placeholder="Contoh: 0123456789"
+          minLength={10}
+          maxLength={11}
           className="mt-2 w-full rounded-2xl border border-[#ead8bc] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#b58a54]"
         />
       </div>
