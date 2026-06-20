@@ -18,6 +18,7 @@ import { RSVPSheet } from "@/components/bottom-sheets/RSVPSheet";
 import { GiftSheet } from "@/components/bottom-sheets/GiftSheet";
 import { GuestbookSheet } from "@/components/bottom-sheets/GuestbookSheet";
 import { ContactSheet } from "@/components/bottom-sheets/ContactSheet";
+import { FAQSection } from "@/components/sections/FAQSection";
 
 type BottomActionKey = "location" | "rsvp" | "gift" | "guestbook" | "contact";
 
@@ -73,6 +74,7 @@ export default function Home() {
       <CountdownSection />
       <TimelineSection />
       <EventDetailsSection />
+      <FAQSection />
 
       <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-[#e8d9c4] bg-[#fffaf3]/90 px-4 py-3 shadow-[0_-10px_40px_rgba(88,63,38,0.12)] backdrop-blur-xl">
         <div className="mx-auto grid max-w-md grid-cols-5 gap-2">
