@@ -22,6 +22,7 @@ import { FAQSection } from "@/components/sections/FAQSection";
 import { CoupleSlideshowSection } from "@/components/sections/CoupleSlideshowSection";
 import { GuestPhotoUploadSection } from "@/components/sections/GuestPhotoUploadSection";
 import { MusicPlayer } from "@/components/shared/MusicPlayer";
+import { SectionDivider } from "@/components/shared/SectionDivider";
 
 type BottomActionKey = "location" | "rsvp" | "gift" | "guestbook" | "contact";
 
@@ -109,11 +110,15 @@ export default function Home() {
           <div ref={countdownRef}>
             <CountdownSection />
           </div>
-
+          <SectionDivider />
           <TimelineSection />
+          <SectionDivider />
           <CoupleSlideshowSection />
+          <SectionDivider />
           <EventDetailsSection />
+          <SectionDivider />
           <GuestPhotoUploadSection />
+          <SectionDivider />
           <FAQSection />
         </>
       ) : null}
