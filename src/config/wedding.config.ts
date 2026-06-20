@@ -36,6 +36,10 @@ export const weddingConfig = {
     qrImageUrl: "",
   },
 
+  guestPhotos: {
+    googleDriveUploadUrl: "https://drive.google.com",
+  },
+
   contact: {
     groomSide: {
       name: "Wakil pihak lelaki",

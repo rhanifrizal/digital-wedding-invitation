@@ -19,6 +19,8 @@ import { GiftSheet } from "@/components/bottom-sheets/GiftSheet";
 import { GuestbookSheet } from "@/components/bottom-sheets/GuestbookSheet";
 import { ContactSheet } from "@/components/bottom-sheets/ContactSheet";
 import { FAQSection } from "@/components/sections/FAQSection";
+import { CoupleSlideshowSection } from "@/components/sections/CoupleSlideshowSection";
+import { GuestPhotoUploadSection } from "@/components/sections/GuestPhotoUploadSection";
 
 type BottomActionKey = "location" | "rsvp" | "gift" | "guestbook" | "contact";
 
@@ -73,7 +75,9 @@ export default function Home() {
       <HeroSection />
       <CountdownSection />
       <TimelineSection />
+      <CoupleSlideshowSection />
       <EventDetailsSection />
+      <GuestPhotoUploadSection />
       <FAQSection />
 
       <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-[#e8d9c4] bg-[#fffaf3]/90 px-4 py-3 shadow-[0_-10px_40px_rgba(88,63,38,0.12)] backdrop-blur-xl">
