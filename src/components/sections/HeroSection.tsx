@@ -4,7 +4,12 @@ import { motion } from "motion/react";
 import { Heart } from "lucide-react";
 import { weddingConfig } from "@/config/wedding.config";
 
-export function HeroSection() {
+type HeroSectionProps = {
+  isOpened: boolean;
+  onOpenInvitation: () => void;
+};
+
+export function HeroSection({ isOpened, onOpenInvitation }: HeroSectionProps) {
   return (
     <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-16">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(212,175,122,0.28),_transparent_32%),linear-gradient(180deg,_#fffaf3_0%,_#f8eadc_100%)]" />
@@ -86,13 +91,25 @@ export function HeroSection() {
           </p>
         </motion.div>
 
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          whileHover={{ y: -2 }}
-          className="mt-10 rounded-full bg-[#2f2a25] px-8 py-4 text-sm font-medium uppercase tracking-[0.25em] text-white shadow-[0_18px_45px_rgba(47,42,37,0.25)] transition hover:bg-[#4a3b31]"
-        >
-          {weddingConfig.invitation.openingText}
-        </motion.button>
+        {!isOpened ? (
+          <motion.button
+            type="button"
+            onClick={onOpenInvitation}
+            whileTap={{ scale: 0.97 }}
+            whileHover={{ y: -2 }}
+            className="mt-10 rounded-full bg-[#2f2a25] px-8 py-4 text-sm font-medium uppercase tracking-[0.25em] text-white shadow-[0_18px_45px_rgba(47,42,37,0.25)] transition hover:bg-[#4a3b31]"
+          >
+            {weddingConfig.invitation.openingText}
+          </motion.button>
+        ) : (
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-10 text-sm uppercase tracking-[0.25em] text-[#9c7a4d]"
+          >
+            Jemputan Dibuka
+          </motion.p>
+        )}
       </motion.div>
     </section>
   );

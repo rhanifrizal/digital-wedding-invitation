@@ -41,6 +41,10 @@ export const weddingConfig = {
     googleDriveUploadUrl: "https://drive.google.com",
   },
 
+  music: {
+    src: "/audio/wedding-music.mp3",
+  },
+
   contact: {
     groomSide: {
       name: "Wakil pihak lelaki",

@@ -21,6 +21,7 @@ import { ContactSheet } from "@/components/bottom-sheets/ContactSheet";
 import { FAQSection } from "@/components/sections/FAQSection";
 import { CoupleSlideshowSection } from "@/components/sections/CoupleSlideshowSection";
 import { GuestPhotoUploadSection } from "@/components/sections/GuestPhotoUploadSection";
+import { MusicPlayer } from "@/components/shared/MusicPlayer";
 
 type BottomActionKey = "location" | "rsvp" | "gift" | "guestbook" | "contact";
 
@@ -67,12 +68,17 @@ const sheetContent: Record<BottomActionKey, React.ReactNode> = {
 
 export default function Home() {
   const [activeSheet, setActiveSheet] = useState<BottomActionKey | null>(null);
+  const [isInvitationOpened, setIsInvitationOpened] = useState(false);
 
   const activeAction = bottomActions.find((action) => action.key === activeSheet);
 
   return (
     <main className="min-h-screen bg-[#fdf8f1] pb-28 text-[#2f2a25]">
-      <HeroSection />
+      <HeroSection
+        isOpened={isInvitationOpened}
+        onOpenInvitation={() => setIsInvitationOpened(true)}
+      />
+      <MusicPlayer shouldPlay={isInvitationOpened} />
       <CountdownSection />
       <TimelineSection />
       <CoupleSlideshowSection />
