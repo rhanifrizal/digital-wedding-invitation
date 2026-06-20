@@ -10,33 +10,72 @@ type GuestbookMessage = {
   created_at: string;
 };
 
+const MESSAGE_PAGE_SIZE = 10;
+
 export function GuestbookSheet() {
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<GuestbookMessage[]>([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const fetchMessages = async () => {
-    setIsLoadingMessages(true);
+  const fetchMessages = async (page = 0, shouldAppend = false) => {
+    if (shouldAppend) {
+      setIsLoadingMore(true);
+    } else {
+      setIsLoadingMessages(true);
+    }
+
+    setErrorMessage("");
+
+    const from = page * MESSAGE_PAGE_SIZE;
+    const to = from + MESSAGE_PAGE_SIZE - 1;
 
     const { data, error } = await supabase
       .from("guestbook_messages")
       .select("id, name, message, created_at")
       .eq("is_visible", true)
       .order("created_at", { ascending: false })
-      .limit(10);
+      .range(from, to);
 
     setIsLoadingMessages(false);
+    setIsLoadingMore(false);
 
     if (error) {
       setErrorMessage("Maaf, ucapan tidak dapat dimuatkan.");
       return;
     }
 
-    setMessages(data ?? []);
+    const fetchedMessages = data ?? [];
+
+    setHasMoreMessages(fetchedMessages.length === MESSAGE_PAGE_SIZE);
+    setCurrentPage(page);
+
+    if (shouldAppend) {
+      setMessages((current) => {
+        const existingIds = new Set(current.map((item) => item.id));
+        const newMessages = fetchedMessages.filter(
+          (item) => !existingIds.has(item.id),
+        );
+
+        return [...current, ...newMessages];
+      });
+
+      return;
+    }
+
+    setMessages(fetchedMessages);
+  };
+
+  const handleLoadMore = () => {
+    if (isLoadingMore || !hasMoreMessages) return;
+
+    fetchMessages(currentPage + 1, true);
   };
 
   useEffect(() => {
@@ -45,37 +84,37 @@ export function GuestbookSheet() {
 
   useEffect(() => {
     const channel = supabase
-        .channel("guestbook-messages-realtime")
-        .on(
+      .channel("guestbook-messages-realtime")
+      .on(
         "postgres_changes",
         {
-            event: "INSERT",
-            schema: "public",
-            table: "guestbook_messages",
-            filter: "is_visible=eq.true",
+          event: "INSERT",
+          schema: "public",
+          table: "guestbook_messages",
+          filter: "is_visible=eq.true",
         },
         (payload) => {
-            const newMessage = payload.new as GuestbookMessage;
+          const newMessage = payload.new as GuestbookMessage;
 
-            setMessages((current) => {
+          setMessages((current) => {
             const alreadyExists = current.some(
-                (item) => item.id === newMessage.id,
+              (item) => item.id === newMessage.id,
             );
 
             if (alreadyExists) {
-                return current;
+              return current;
             }
 
-            return [newMessage, ...current].slice(0, 10);
-            });
+            return [newMessage, ...current];
+          });
         },
-        )
-        .subscribe();
+      )
+      .subscribe();
 
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, []);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const handleSubmit = async () => {
     setSuccessMessage("");
@@ -123,7 +162,15 @@ export function GuestbookSheet() {
     setSuccessMessage("Terima kasih. Ucapan anda telah dihantar.");
 
     if (data) {
-      setMessages((current) => [data, ...current].slice(0, 10));
+      setMessages((current) => {
+        const alreadyExists = current.some((item) => item.id === data.id);
+
+        if (alreadyExists) {
+          return current;
+        }
+
+        return [data, ...current];
+      });
     }
   };
 
@@ -198,17 +245,34 @@ export function GuestbookSheet() {
             Belum ada ucapan. Jadilah yang pertama memberi ucapan.
           </div>
         ) : (
-          messages.map((item) => (
-            <div
-              key={item.id}
-              className="rounded-3xl border border-[#ead8bc] bg-white/70 p-5"
-            >
-              <p className="font-medium text-[#2f2a25]">{item.name}</p>
-              <p className="mt-2 text-sm leading-6 text-[#7a6b5e]">
-                {item.message}
+          <>
+            {messages.map((item) => (
+              <div
+                key={item.id}
+                className="rounded-3xl border border-[#ead8bc] bg-white/70 p-5"
+              >
+                <p className="font-medium text-[#2f2a25]">{item.name}</p>
+                <p className="mt-2 text-sm leading-6 text-[#7a6b5e]">
+                  {item.message}
+                </p>
+              </div>
+            ))}
+
+            {hasMoreMessages ? (
+              <button
+                type="button"
+                onClick={handleLoadMore}
+                disabled={isLoadingMore}
+                className="w-full rounded-2xl border border-[#d8b989] bg-white px-4 py-3 text-sm font-medium text-[#2f2a25] transition hover:bg-[#f3e5d3] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isLoadingMore ? "Memuatkan..." : "Lihat Lagi Ucapan"}
+              </button>
+            ) : (
+              <p className="text-center text-xs text-[#9c7a4d]">
+                Semua ucapan telah dipaparkan.
               </p>
-            </div>
-          ))
+            )}
+          </>
         )}
       </div>
     </div>
