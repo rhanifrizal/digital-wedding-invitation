@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 
 type GuestbookMessage = {
@@ -26,7 +26,7 @@ export function GuestbookSheet() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const fetchMessages = async (page = 0, shouldAppend = false) => {
+  const fetchMessages = useCallback(async (page = 0, shouldAppend = false) => {
     if (shouldAppend) {
       setIsLoadingMore(true);
     } else {
@@ -72,7 +72,7 @@ export function GuestbookSheet() {
     }
 
     setMessages(fetchedMessages);
-  };
+  }, []);
 
   const handleLoadMore = () => {
     if (isLoadingMore || !hasMoreMessages) return;
@@ -80,112 +80,115 @@ export function GuestbookSheet() {
     fetchMessages(currentPage + 1, true);
   };
 
-  const syncVisibleMessages = async () => {
+  const syncVisibleMessages = useCallback(async () => {
     const currentLimit = Math.max(messages.length, MESSAGE_PAGE_SIZE);
 
     const { data, error } = await supabase
-        .from("guestbook_messages")
-        .select("id, name, message, created_at")
-        .eq("is_visible", true)
-        .order("created_at", { ascending: false })
-        .range(0, currentLimit - 1);
+      .from("guestbook_messages")
+      .select("id, name, message, created_at")
+      .eq("is_visible", true)
+      .order("created_at", { ascending: false })
+      .range(0, currentLimit - 1);
 
     if (error) {
-        return;
+      return;
     }
 
     setMessages(data ?? []);
     setHasMoreMessages((data ?? []).length === currentLimit);
-  };
+  }, [messages.length]);
 
   useEffect(() => {
-    fetchMessages();
-  }, []);
+    const timer = window.setTimeout(() => {
+      fetchMessages();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [fetchMessages]);
 
   useEffect(() => {
     const channel = supabase
-        .channel("guestbook-messages-realtime")
-        .on(
+      .channel("guestbook-messages-realtime")
+      .on(
         "postgres_changes",
         {
-            event: "INSERT",
-            schema: "public",
-            table: "guestbook_messages",
+          event: "INSERT",
+          schema: "public",
+          table: "guestbook_messages",
         },
         (payload) => {
-            const newMessage = payload.new as GuestbookMessage & {
-            is_visible?: boolean;
-            };
+          const newMessage = payload.new as GuestbookMessage;
 
-            if (newMessage.is_visible === false) return;
+          if (newMessage.is_visible === false) return;
 
-            setMessages((current) => {
+          setMessages((current) => {
             const alreadyExists = current.some(
-                (item) => item.id === newMessage.id,
+              (item) => item.id === newMessage.id,
             );
 
             if (alreadyExists) {
-                return current;
+              return current;
             }
 
             return [newMessage, ...current];
-            });
+          });
         },
-        )
-        .on(
+      )
+      .on(
         "postgres_changes",
         {
-            event: "UPDATE",
-            schema: "public",
-            table: "guestbook_messages",
+          event: "UPDATE",
+          schema: "public",
+          table: "guestbook_messages",
         },
         (payload) => {
-            const updatedMessage = payload.new as GuestbookMessage & {
-            is_visible?: boolean;
-            };
+          const updatedMessage = payload.new as GuestbookMessage;
 
-            setMessages((current) => {
+          setMessages((current) => {
             if (updatedMessage.is_visible === false) {
-                return current.filter((item) => item.id !== updatedMessage.id);
+              return current.filter((item) => item.id !== updatedMessage.id);
             }
 
             const alreadyExists = current.some(
-                (item) => item.id === updatedMessage.id,
+              (item) => item.id === updatedMessage.id,
             );
 
             if (alreadyExists) {
-                return current.map((item) =>
+              return current.map((item) =>
                 item.id === updatedMessage.id
-                    ? {
-                        id: updatedMessage.id,
-                        name: updatedMessage.name,
-                        message: updatedMessage.message,
-                        created_at: updatedMessage.created_at,
+                  ? {
+                      id: updatedMessage.id,
+                      name: updatedMessage.name,
+                      message: updatedMessage.message,
+                      created_at: updatedMessage.created_at,
+                      is_visible: updatedMessage.is_visible,
                     }
-                    : item,
-                );
+                  : item,
+              );
             }
 
             return [updatedMessage, ...current];
-            });
+          });
         },
-        )
-        .subscribe();
+      )
+      .subscribe();
 
     return () => {
-        supabase.removeChannel(channel);
+      supabase.removeChannel(channel);
     };
   }, []);
 
   useEffect(() => {
     const syncTimer = window.setInterval(() => {
-        syncVisibleMessages();
+      syncVisibleMessages();
     }, 5000);
 
     return () => {
-        window.clearInterval(syncTimer);
+      window.clearInterval(syncTimer);
     };
-  }, [messages.length]);
+  }, [syncVisibleMessages]);
 
   const handleSubmit = async () => {
     setSuccessMessage("");
@@ -318,45 +321,45 @@ export function GuestbookSheet() {
         ) : (
           <>
             <AnimatePresence initial={false}>
-                {messages.map((item) => (
-                    <motion.div
-                    key={item.id}
-                    layout
-                    initial={{ opacity: 0, y: -10, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.96 }}
-                    transition={{
-                        duration: 0.25,
-                        ease: "easeOut",
-                        layout: {
-                        duration: 0.25,
-                        },
-                    }}
-                    className="rounded-3xl border border-[#ead8bc] bg-white/70 p-5"
-                    >
-                    <p className="font-medium text-[#2f2a25]">{item.name}</p>
-                    <p className="mt-2 text-sm leading-6 text-[#7a6b5e]">
-                        {item.message}
-                    </p>
-                    </motion.div>
-                ))}
+              {messages.map((item) => (
+                <motion.div
+                  key={item.id}
+                  layout
+                  initial={{ opacity: 0, y: -10, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.96 }}
+                  transition={{
+                    duration: 0.25,
+                    ease: "easeOut",
+                    layout: {
+                      duration: 0.25,
+                    },
+                  }}
+                  className="rounded-3xl border border-[#ead8bc] bg-white/70 p-5"
+                >
+                  <p className="font-medium text-[#2f2a25]">{item.name}</p>
+                  <p className="mt-2 text-sm leading-6 text-[#7a6b5e]">
+                    {item.message}
+                  </p>
+                </motion.div>
+              ))}
             </AnimatePresence>
 
             <motion.div layout>
-                {hasMoreMessages ? (
-                    <button
-                    type="button"
-                    onClick={handleLoadMore}
-                    disabled={isLoadingMore}
-                    className="w-full rounded-2xl border border-[#d8b989] bg-white px-4 py-3 text-sm font-medium text-[#2f2a25] transition hover:bg-[#f3e5d3] disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                    {isLoadingMore ? "Memuatkan..." : "Lihat Lagi Ucapan"}
-                    </button>
-                ) : (
-                    <p className="text-center text-xs text-[#9c7a4d]">
-                    Semua ucapan telah dipaparkan.
-                    </p>
-                )}
+              {hasMoreMessages ? (
+                <button
+                  type="button"
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                  className="w-full rounded-2xl border border-[#d8b989] bg-white px-4 py-3 text-sm font-medium text-[#2f2a25] transition hover:bg-[#f3e5d3] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isLoadingMore ? "Memuatkan..." : "Lihat Lagi Ucapan"}
+                </button>
+              ) : (
+                <p className="text-center text-xs text-[#9c7a4d]">
+                  Semua ucapan telah dipaparkan.
+                </p>
+              )}
             </motion.div>
           </>
         )}

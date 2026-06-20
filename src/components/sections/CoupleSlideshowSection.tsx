@@ -45,6 +45,20 @@ export function CoupleSlideshowSection() {
 
   const currentSlide = coupleSlideshowConfig[activeIndex];
 
+  useEffect(() => {
+    if (coupleSlideshowConfig.length <= 1) return;
+
+    const slideTimer = window.setInterval(() => {
+      setActiveIndex((current) =>
+        current === coupleSlideshowConfig.length - 1 ? 0 : current + 1,
+      );
+    }, 4000);
+
+    return () => {
+      window.clearInterval(slideTimer);
+    };
+  }, []);
+
   if (!currentSlide) {
     return null;
   }
@@ -60,20 +74,6 @@ export function CoupleSlideshowSection() {
       current === coupleSlideshowConfig.length - 1 ? 0 : current + 1,
     );
   };
-
-  useEffect(() => {
-    const slideTimer = window.setInterval(() => {
-      goToNextSlide();
-    }, 4000);
-
-    return () => {
-      window.clearInterval(slideTimer);
-    };
-  }, []);
-
-  if (!currentSlide) {
-    return null;
-  }
 
   return (
     <div>

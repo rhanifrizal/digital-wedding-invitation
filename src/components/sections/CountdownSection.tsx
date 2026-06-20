@@ -26,16 +26,9 @@ function getCountdown(): CountdownValue {
 }
 
 export function CountdownSection() {
-  const [countdown, setCountdown] = useState<CountdownValue>({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
+  const [countdown, setCountdown] = useState(() => getCountdown());
 
   useEffect(() => {
-    setCountdown(getCountdown());
-
     const timer = window.setInterval(() => {
       setCountdown(getCountdown());
     }, 1000);
