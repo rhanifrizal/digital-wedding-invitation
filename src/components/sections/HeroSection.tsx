@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { Heart } from "lucide-react";
+import { CalendarDays, Heart, MapPin, Sparkles } from "lucide-react";
 import { FloatingParticles } from "@/components/shared/FloatingParticles";
 import { weddingConfig } from "@/config/wedding.config";
 
@@ -12,14 +12,16 @@ type HeroSectionProps = {
 
 export function HeroSection({ isOpened, onOpenInvitation }: HeroSectionProps) {
   return (
-    <section className="relative flex min-h-dvh items-center justify-center overflow-hidden px-6 py-8">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(212,175,122,0.28),_transparent_32%),linear-gradient(180deg,_#fffaf3_0%,_#f8eadc_100%)]" />
+    <section className="relative flex min-h-dvh items-center justify-center overflow-hidden px-6 py-5">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,_rgba(232,183,173,0.34),_transparent_28%),radial-gradient(circle_at_85%_18%,_rgba(216,185,137,0.32),_transparent_30%),linear-gradient(180deg,_#fffaf3_0%,_#f8eadc_55%,_#fdf8f1_100%)]" />
+
+      <div className="pointer-events-none absolute inset-0 opacity-[0.08] [background-image:radial-gradient(circle_at_1px_1px,_#9c7a4d_1px,_transparent_0)] [background-size:22px_22px]" />
 
       <motion.div
-        className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[#efd4d0]/50 blur-3xl"
+        className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[#efd4d0]/55 blur-3xl"
         animate={{
           scale: [1, 1.08, 1],
-          opacity: [0.45, 0.7, 0.45],
+          opacity: [0.45, 0.72, 0.45],
         }}
         transition={{
           duration: 6,
@@ -42,41 +44,73 @@ export function HeroSection({ isOpened, onOpenInvitation }: HeroSectionProps) {
       />
 
       <FloatingParticles count={36} />
-    
+
+      <div className="pointer-events-none absolute left-5 top-5 h-24 w-24 rounded-tl-[2rem] border-l border-t border-[#d8b989]/35" />
+      <div className="pointer-events-none absolute right-5 bottom-8 h-24 w-24 rounded-br-[2rem] border-b border-r border-[#d8b989]/35" />
+
+      <div className="pointer-events-none absolute left-8 top-12 text-5xl text-[#d8b989]/15">
+        ❦
+      </div>
+      <div className="pointer-events-none absolute bottom-16 right-8 text-5xl text-[#e8b7ad]/20">
+        ❦
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 28 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.9, ease: "easeOut" }}
         className="relative z-10 mx-auto flex w-full max-w-md flex-col items-center text-center"
       >
-        <p className="mb-5 text-xs uppercase tracking-[0.45em] text-[#9c7a4d] sm:text-sm">
-          {weddingConfig.invitation.title}
-        </p>
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.65, ease: "easeOut" }}
+          className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#ead8bc] bg-white/45 px-4 py-1.5 shadow-[0_12px_35px_rgba(88,63,38,0.08)] backdrop-blur"
+        >
+          <Sparkles className="h-3.5 w-3.5 text-[#b58a54]" strokeWidth={1.7} />
+          <p className="text-[11px] uppercase tracking-[0.35em] text-[#9c7a4d] sm:text-xs">
+            {weddingConfig.invitation.title}
+          </p>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, scale: 0.86 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.25, duration: 0.7, ease: "easeOut" }}
-          className="mb-7 flex h-24 w-24 items-center justify-center rounded-full border border-[#d8b989]/70 bg-white/50 shadow-[0_20px_60px_rgba(93,64,37,0.12)] backdrop-blur sm:h-28 sm:w-28"
+          className="relative mb-5 flex h-20 w-20 items-center justify-center rounded-full border border-[#d8b989]/70 bg-white/55 shadow-[0_20px_60px_rgba(93,64,37,0.13)] backdrop-blur sm:h-24 sm:w-24"
         >
+          <div className="absolute inset-2 rounded-full border border-[#ead8bc]/80" />
+          <div className="absolute -inset-2 rounded-full border border-[#d8b989]/20" />
+
           <Heart
-            className="h-9 w-9 text-[#b58a54] sm:h-10 sm:w-10"
-            strokeWidth={1.5}
+            className="relative h-8 w-8 fill-[#b58a54]/10 text-[#b58a54] sm:h-9 sm:w-9"            strokeWidth={1.5}
           />
         </motion.div>
 
-        <motion.h1
+        <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35, duration: 0.7, ease: "easeOut" }}
-          className="font-serif text-[3.45rem] leading-none text-[#2f2a25] sm:text-6xl"
+          className="relative"
         >
-          {weddingConfig.couple.displayNames}
-        </motion.h1>
+          <p className="mb-3 text-xs uppercase tracking-[0.32em] text-[#9c7a4d]">
+            Dengan penuh kesyukuran
+          </p>
 
-        <div className="my-5 h-px w-28 bg-gradient-to-r from-transparent via-[#b58a54] to-transparent" />
+          <h1 className="font-serif text-[3.05rem] leading-[0.92] text-[#2f2a25] drop-shadow-sm sm:text-6xl">
+            {weddingConfig.couple.displayNames}
+          </h1>
+        </motion.div>
 
-        <p className="max-w-sm text-base leading-7 text-[#6f6257]">
+        <div className="my-4 flex items-center gap-3">
+          <div className="h-px w-16 bg-gradient-to-r from-transparent via-[#b58a54] to-[#b58a54]" />
+          <span className="font-serif text-xl leading-none text-[#b58a54]">
+            ❦
+          </span>
+          <div className="h-px w-16 bg-gradient-to-l from-transparent via-[#b58a54] to-[#b58a54]" />
+        </div>
+
+        <p className="max-w-sm text-sm leading-6 text-[#6f6257] sm:text-base sm:leading-7">
           {weddingConfig.invitation.subtitle}
         </p>
 
@@ -84,17 +118,36 @@ export function HeroSection({ isOpened, onOpenInvitation }: HeroSectionProps) {
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.55, duration: 0.7, ease: "easeOut" }}
-          className="mt-7 w-full max-w-[19rem] rounded-[1.75rem] border border-[#e5cfaa] bg-white/55 px-5 py-4 shadow-[0_18px_60px_rgba(88,63,38,0.12)] backdrop-blur sm:max-w-sm sm:px-6 sm:py-5"
+          className="mt-5 w-full max-w-[19.5rem] overflow-hidden rounded-[1.75rem] border border-[#e5cfaa] bg-white/58 shadow-[0_18px_60px_rgba(88,63,38,0.13)] backdrop-blur sm:max-w-sm"
         >
-          <p className="text-xs uppercase tracking-[0.25em] text-[#9c7a4d] sm:text-sm">
-            {weddingConfig.event.displayDate}
-          </p>
-          <p className="mt-2 text-xl font-medium text-[#3c332c]">
-            {weddingConfig.event.time}
-          </p>
-          <p className="mt-1 text-sm text-[#7a6b5e]">
-            {weddingConfig.event.venueName}
-          </p>
+          <div className="h-1 bg-gradient-to-r from-transparent via-[#d8b989] to-transparent" />
+
+          <div className="px-5 py-3.5 sm:px-6 sm:py-4">
+            <div className="flex items-start gap-3 text-left">
+              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[#d8b989]/60 bg-[#fffaf3] text-[#b58a54]">
+                <CalendarDays className="h-4.5 w-4.5" strokeWidth={1.7} />
+              </div>
+
+              <div>
+                <p className="text-xs uppercase tracking-[0.24em] text-[#9c7a4d]">
+                  {weddingConfig.event.displayDate}
+                </p>
+                <p className="mt-1 text-lg font-medium text-[#3c332c]">
+                  {weddingConfig.event.time}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-3 flex items-start gap-3 rounded-2xl border border-[#ead8bc]/80 bg-white/55 px-4 py-2.5 text-left">
+              <MapPin
+                className="mt-0.5 h-4 w-4 shrink-0 text-[#b58a54]"
+                strokeWidth={1.8}
+              />
+              <p className="text-sm leading-6 text-[#7a6b5e]">
+                {weddingConfig.event.venueName}
+              </p>
+            </div>
+          </div>
         </motion.div>
 
         {!isOpened ? (
@@ -103,9 +156,10 @@ export function HeroSection({ isOpened, onOpenInvitation }: HeroSectionProps) {
             onClick={onOpenInvitation}
             whileTap={{ scale: 0.97 }}
             whileHover={{ y: -2 }}
-            className="mt-8 rounded-full bg-[#2f2a25] px-8 py-4 text-sm font-medium uppercase tracking-[0.25em] text-white shadow-[0_18px_45px_rgba(47,42,37,0.25)] transition hover:bg-[#4a3b31]"
+            className="group relative mt-6 overflow-hidden rounded-full bg-[#2f2a25] px-8 py-3.5 text-sm font-medium uppercase tracking-[0.25em] text-white shadow-[0_18px_45px_rgba(47,42,37,0.25)] transition hover:bg-[#4a3b31]"
           >
-            {weddingConfig.invitation.openingText}
+            <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition duration-700 group-hover:translate-x-full" />
+            <span className="relative">{weddingConfig.invitation.openingText}</span>
           </motion.button>
         ) : (
           <motion.p
