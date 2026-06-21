@@ -47,11 +47,11 @@ export const weddingConfig = {
 
   contact: {
     groomSide: {
-      name: "Wakil pihak lelaki",
+      name: "Hanif",
       phone: "601128054997",
     },
     brideSide: {
-      name: "Wakil pihak perempuan",
+      name: "Fatihah",
       phone: "601114444795",
     },
   },
