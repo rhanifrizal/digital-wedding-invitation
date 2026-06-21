@@ -103,7 +103,7 @@ export default function AdminPage() {
   );
 
   useEffect(() => {
-    if (!adminPassword || !data) return;
+    if (!adminPassword) return;
 
     const syncTimer = window.setInterval(() => {
       loadDashboard(adminPassword, true);
@@ -112,7 +112,7 @@ export default function AdminPage() {
     return () => {
       window.clearInterval(syncTimer);
     };
-  }, [adminPassword, data, loadDashboard]);
+  }, [adminPassword, loadDashboard]);
 
   const filteredRsvps = useMemo(() => {
     const keyword = rsvpSearch.trim().toLowerCase();
@@ -161,33 +161,16 @@ export default function AdminPage() {
     Math.ceil(filteredGuestbookMessages.length / GUESTBOOK_PAGE_SIZE),
   );
 
-  const paginatedRsvps = paginate(filteredRsvps, rsvpPage, RSVP_PAGE_SIZE);
+  const safeRsvpPage = Math.min(rsvpPage, rsvpTotalPages);
+  const safeGuestbookPage = Math.min(guestbookPage, guestbookTotalPages);
+
+  const paginatedRsvps = paginate(filteredRsvps, safeRsvpPage, RSVP_PAGE_SIZE);
 
   const paginatedGuestbookMessages = paginate(
     filteredGuestbookMessages,
-    guestbookPage,
+    safeGuestbookPage,
     GUESTBOOK_PAGE_SIZE,
   );
-
-  useEffect(() => {
-    setRsvpPage(1);
-  }, [rsvpSearch, rsvpFilter]);
-
-  useEffect(() => {
-    setGuestbookPage(1);
-  }, [guestbookSearch, guestbookFilter]);
-
-  useEffect(() => {
-    if (rsvpPage > rsvpTotalPages) {
-      setRsvpPage(rsvpTotalPages);
-    }
-  }, [rsvpPage, rsvpTotalPages]);
-
-  useEffect(() => {
-    if (guestbookPage > guestbookTotalPages) {
-      setGuestbookPage(guestbookTotalPages);
-    }
-  }, [guestbookPage, guestbookTotalPages]);
 
   const handleLogin = async () => {
     const trimmedPassword = password.trim();
@@ -378,13 +361,19 @@ export default function AdminPage() {
                   { label: "Hadir", value: "attending" },
                   { label: "Tidak Hadir", value: "not_attending" },
                 ]}
-                onChange={(value) => setRsvpFilter(value as RSVPFilter)}
+                onChange={(value) => {
+                  setRsvpFilter(value as RSVPFilter);
+                  setRsvpPage(1);
+                }}
               />
             </div>
 
             <SearchInput
               value={rsvpSearch}
-              onChange={setRsvpSearch}
+              onChange={(value) => {
+                setRsvpSearch(value);
+                setRsvpPage(1);
+              }}
               placeholder="Search name, phone, or note..."
             />
 
@@ -442,10 +431,12 @@ export default function AdminPage() {
             </div>
 
             <Pagination
-              page={rsvpPage}
+              page={safeRsvpPage}
               totalPages={rsvpTotalPages}
-              onPrevious={() => setRsvpPage((current) => current - 1)}
-              onNext={() => setRsvpPage((current) => current + 1)}
+              onPrevious={() => setRsvpPage((current) => Math.max(1, current - 1))}
+              onNext={() =>
+                setRsvpPage((current) => Math.min(rsvpTotalPages, current + 1))
+              }
             />
           </div>
 
@@ -466,15 +457,19 @@ export default function AdminPage() {
                   { label: "Visible", value: "visible" },
                   { label: "Hidden", value: "hidden" },
                 ]}
-                onChange={(value) =>
-                  setGuestbookFilter(value as GuestbookFilter)
-                }
+                onChange={(value) => {
+                  setGuestbookFilter(value as GuestbookFilter);
+                  setGuestbookPage(1);
+                }}
               />
             </div>
 
             <SearchInput
               value={guestbookSearch}
-              onChange={setGuestbookSearch}
+              onChange={(value) => {
+                setGuestbookSearch(value);
+                setGuestbookPage(1);
+              }}
               placeholder="Search name or message..."
             />
 
@@ -542,10 +537,14 @@ export default function AdminPage() {
             </div>
 
             <Pagination
-              page={guestbookPage}
+              page={safeGuestbookPage}
               totalPages={guestbookTotalPages}
-              onPrevious={() => setGuestbookPage((current) => current - 1)}
-              onNext={() => setGuestbookPage((current) => current + 1)}
+              onPrevious={() => setGuestbookPage((current) => Math.max(1, current - 1))}
+              onNext={() =>
+                setGuestbookPage((current) =>
+                  Math.min(guestbookTotalPages, current + 1),
+                )
+              }
             />
           </div>
         </section>
