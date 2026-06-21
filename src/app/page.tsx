@@ -100,7 +100,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-[#fdf8f1] pb-28 text-[#2f2a25]">
+    <main className="min-h-screen bg-[#fdf8f1] pb-32 text-[#2f2a25]">
       <HeroSection
         isOpened={isInvitationOpened}
         onOpenInvitation={handleOpenInvitation}
@@ -148,28 +148,42 @@ export default function Home() {
       ) : null}
 
       {isInvitationOpened ? (
-        <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-[#e8d9c4] bg-[#fffaf3]/90 px-4 py-3 shadow-[0_-10px_40px_rgba(88,63,38,0.12)] backdrop-blur-xl">
-          <div className="mx-auto grid max-w-md grid-cols-5 gap-2">
-            {bottomActions.map((action) => {
-              const Icon = action.icon;
-              const isActive = activeSheet === action.key;
+        <nav className="fixed inset-x-0 bottom-4 z-50 px-4">
+          <div className="mx-auto max-w-md rounded-[2rem] border border-[#ead8bc] bg-[#fffaf3]/88 p-2 shadow-[0_18px_60px_rgba(47,42,37,0.18)] backdrop-blur-xl">
+            <div className="grid grid-cols-5 gap-1.5">
+              {bottomActions.map((action) => {
+                const Icon = action.icon;
+                const isActive = activeSheet === action.key;
 
-              return (
-                <button
-                  key={action.key}
-                  type="button"
-                  onClick={() => setActiveSheet(action.key)}
-                  className={`flex flex-col items-center gap-1 rounded-2xl px-2 py-2 transition ${
-                    isActive
-                      ? "bg-[#2f2a25] text-white"
-                      : "text-[#7a6b5e] hover:bg-[#f3e5d3] hover:text-[#2f2a25]"
-                  }`}
-                >
-                  <Icon className="h-5 w-5" strokeWidth={1.7} />
-                  <span className="text-[11px] font-medium">{action.label}</span>
-                </button>
-              );
-            })}
+                return (
+                  <button
+                    key={action.key}
+                    type="button"
+                    onClick={() => setActiveSheet(action.key)}
+                    className={`group relative flex flex-col items-center justify-center gap-1 overflow-hidden rounded-[1.5rem] px-2 py-2.5 transition ${
+                      isActive
+                        ? "bg-[#2f2a25] text-white shadow-[0_10px_24px_rgba(47,42,37,0.22)]"
+                        : "text-[#7a6b5e] hover:bg-white hover:text-[#2f2a25]"
+                    }`}
+                  >
+                    {isActive ? (
+                      <span className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(216,185,137,0.28),_transparent_55%)]" />
+                    ) : null}
+
+                    <Icon
+                      className={`relative h-5 w-5 transition ${
+                        isActive ? "scale-105" : "group-hover:-translate-y-0.5"
+                      }`}
+                      strokeWidth={1.7}
+                    />
+
+                    <span className="relative text-[10.5px] font-medium leading-none">
+                      {action.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </nav>
       ) : null}
