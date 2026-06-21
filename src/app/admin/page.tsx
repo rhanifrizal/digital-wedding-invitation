@@ -1,7 +1,8 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { useCallback, useEffect, useState } from "react";
+import { RefreshCw, Search } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type RSVP = {
   id: string;
@@ -34,11 +35,22 @@ type AdminData = {
   guestbookMessages: GuestbookMessage[];
 };
 
+type RSVPFilter = "all" | "attending" | "not_attending";
+type GuestbookFilter = "all" | "visible" | "hidden";
+
+const RSVP_PAGE_SIZE = 8;
+const GUESTBOOK_PAGE_SIZE = 8;
+
 function formatDate(date: string) {
   return new Intl.DateTimeFormat("ms-MY", {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(date));
+}
+
+function paginate<T>(items: T[], page: number, pageSize: number) {
+  const start = (page - 1) * pageSize;
+  return items.slice(start, start + pageSize);
 }
 
 export default function AdminPage() {
@@ -48,6 +60,15 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isAutoSyncing, setIsAutoSyncing] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const [rsvpSearch, setRsvpSearch] = useState("");
+  const [rsvpFilter, setRsvpFilter] = useState<RSVPFilter>("all");
+  const [rsvpPage, setRsvpPage] = useState(1);
+
+  const [guestbookSearch, setGuestbookSearch] = useState("");
+  const [guestbookFilter, setGuestbookFilter] =
+    useState<GuestbookFilter>("all");
+  const [guestbookPage, setGuestbookPage] = useState(1);
 
   const loadDashboard = useCallback(
     async (passwordToUse = adminPassword, isSilent = false) => {
@@ -92,6 +113,81 @@ export default function AdminPage() {
       window.clearInterval(syncTimer);
     };
   }, [adminPassword, data, loadDashboard]);
+
+  const filteredRsvps = useMemo(() => {
+    const keyword = rsvpSearch.trim().toLowerCase();
+    const rsvps = data?.rsvps ?? [];
+
+    return rsvps.filter((item) => {
+      const matchesFilter =
+        rsvpFilter === "all" || item.attendance_status === rsvpFilter;
+
+      const matchesSearch =
+        !keyword ||
+        item.name.toLowerCase().includes(keyword) ||
+        item.phone?.toLowerCase().includes(keyword) ||
+        item.message?.toLowerCase().includes(keyword);
+
+      return matchesFilter && matchesSearch;
+    });
+  }, [data?.rsvps, rsvpFilter, rsvpSearch]);
+
+  const filteredGuestbookMessages = useMemo(() => {
+    const keyword = guestbookSearch.trim().toLowerCase();
+    const messages = data?.guestbookMessages ?? [];
+
+    return messages.filter((item) => {
+      const matchesFilter =
+        guestbookFilter === "all" ||
+        (guestbookFilter === "visible" && item.is_visible) ||
+        (guestbookFilter === "hidden" && !item.is_visible);
+
+      const matchesSearch =
+        !keyword ||
+        item.name.toLowerCase().includes(keyword) ||
+        item.message.toLowerCase().includes(keyword);
+
+      return matchesFilter && matchesSearch;
+    });
+  }, [data?.guestbookMessages, guestbookFilter, guestbookSearch]);
+
+  const rsvpTotalPages = Math.max(
+    1,
+    Math.ceil(filteredRsvps.length / RSVP_PAGE_SIZE),
+  );
+
+  const guestbookTotalPages = Math.max(
+    1,
+    Math.ceil(filteredGuestbookMessages.length / GUESTBOOK_PAGE_SIZE),
+  );
+
+  const paginatedRsvps = paginate(filteredRsvps, rsvpPage, RSVP_PAGE_SIZE);
+
+  const paginatedGuestbookMessages = paginate(
+    filteredGuestbookMessages,
+    guestbookPage,
+    GUESTBOOK_PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    setRsvpPage(1);
+  }, [rsvpSearch, rsvpFilter]);
+
+  useEffect(() => {
+    setGuestbookPage(1);
+  }, [guestbookSearch, guestbookFilter]);
+
+  useEffect(() => {
+    if (rsvpPage > rsvpTotalPages) {
+      setRsvpPage(rsvpTotalPages);
+    }
+  }, [rsvpPage, rsvpTotalPages]);
+
+  useEffect(() => {
+    if (guestbookPage > guestbookTotalPages) {
+      setGuestbookPage(guestbookTotalPages);
+    }
+  }, [guestbookPage, guestbookTotalPages]);
 
   const handleLogin = async () => {
     const trimmedPassword = password.trim();
@@ -208,7 +304,7 @@ export default function AdminPage() {
 
   return (
     <main className="min-h-dvh bg-[#fdf8f1] px-5 py-8 text-[#2f2a25]">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-7xl">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.35em] text-[#9c7a4d]">
@@ -216,7 +312,7 @@ export default function AdminPage() {
             </p>
             <h1 className="mt-2 font-serif text-4xl">Wedding Dashboard</h1>
             <p className="mt-2 text-sm text-[#7a6b5e]">
-              RSVP summary and guestbook management.
+              RSVP summary, guestbook moderation, search, filter and pagination.
             </p>
             <p className="mt-2 text-xs text-[#9c7a4d]">
               {isAutoSyncing ? "Syncing latest data..." : "Auto-sync enabled"}
@@ -227,8 +323,12 @@ export default function AdminPage() {
             type="button"
             onClick={() => loadDashboard(adminPassword)}
             disabled={isLoading}
-            className="rounded-2xl border border-[#d8b989] bg-white px-5 py-3 text-sm font-medium transition hover:bg-[#f3e5d3] disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#d8b989] bg-white px-5 py-3 text-sm font-medium transition hover:bg-[#f3e5d3] disabled:opacity-60"
           >
+            <RefreshCw
+              className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+              strokeWidth={1.8}
+            />
             {isLoading ? "Refreshing..." : "Refresh Now"}
           </button>
         </div>
@@ -260,16 +360,40 @@ export default function AdminPage() {
           </div>
         ) : null}
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-2">
+        <section className="mt-8 grid gap-6 xl:grid-cols-2">
           <div className="rounded-[2rem] border border-[#ead8bc] bg-white/75 p-5 shadow-[0_20px_70px_rgba(88,63,38,0.08)]">
-            <h2 className="font-serif text-2xl">RSVP List</h2>
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <h2 className="font-serif text-2xl">RSVP List</h2>
+                <p className="mt-1 text-sm text-[#7a6b5e]">
+                  Showing {paginatedRsvps.length} of {filteredRsvps.length}{" "}
+                  filtered records.
+                </p>
+              </div>
 
-            <div className="mt-5 max-h-[36rem] space-y-3 overflow-y-auto pr-1">
-              {data.rsvps.length === 0 ? (
-                <p className="text-sm text-[#7a6b5e]">No RSVP yet.</p>
+              <FilterPills
+                value={rsvpFilter}
+                options={[
+                  { label: "All", value: "all" },
+                  { label: "Hadir", value: "attending" },
+                  { label: "Tidak Hadir", value: "not_attending" },
+                ]}
+                onChange={(value) => setRsvpFilter(value as RSVPFilter)}
+              />
+            </div>
+
+            <SearchInput
+              value={rsvpSearch}
+              onChange={setRsvpSearch}
+              placeholder="Search name, phone, or note..."
+            />
+
+            <div className="mt-5 min-h-[36rem] space-y-3">
+              {paginatedRsvps.length === 0 ? (
+                <EmptyState text="No RSVP found." />
               ) : (
                 <AnimatePresence initial={false}>
-                  {data.rsvps.map((item) => (
+                  {paginatedRsvps.map((item) => (
                     <motion.div
                       key={item.id}
                       layout
@@ -316,19 +440,50 @@ export default function AdminPage() {
                 </AnimatePresence>
               )}
             </div>
+
+            <Pagination
+              page={rsvpPage}
+              totalPages={rsvpTotalPages}
+              onPrevious={() => setRsvpPage((current) => current - 1)}
+              onNext={() => setRsvpPage((current) => current + 1)}
+            />
           </div>
 
           <div className="rounded-[2rem] border border-[#ead8bc] bg-white/75 p-5 shadow-[0_20px_70px_rgba(88,63,38,0.08)]">
-            <h2 className="font-serif text-2xl">Guestbook</h2>
-
-            <div className="mt-5 max-h-[36rem] space-y-3 overflow-y-auto pr-1">
-              {data.guestbookMessages.length === 0 ? (
-                <p className="text-sm text-[#7a6b5e]">
-                  No guestbook messages yet.
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <h2 className="font-serif text-2xl">Guestbook</h2>
+                <p className="mt-1 text-sm text-[#7a6b5e]">
+                  Showing {paginatedGuestbookMessages.length} of{" "}
+                  {filteredGuestbookMessages.length} filtered messages.
                 </p>
+              </div>
+
+              <FilterPills
+                value={guestbookFilter}
+                options={[
+                  { label: "All", value: "all" },
+                  { label: "Visible", value: "visible" },
+                  { label: "Hidden", value: "hidden" },
+                ]}
+                onChange={(value) =>
+                  setGuestbookFilter(value as GuestbookFilter)
+                }
+              />
+            </div>
+
+            <SearchInput
+              value={guestbookSearch}
+              onChange={setGuestbookSearch}
+              placeholder="Search name or message..."
+            />
+
+            <div className="mt-5 min-h-[36rem] space-y-3">
+              {paginatedGuestbookMessages.length === 0 ? (
+                <EmptyState text="No guestbook messages found." />
               ) : (
                 <AnimatePresence initial={false}>
-                  {data.guestbookMessages.map((item) => (
+                  {paginatedGuestbookMessages.map((item) => (
                     <motion.div
                       key={item.id}
                       layout
@@ -385,6 +540,13 @@ export default function AdminPage() {
                 </AnimatePresence>
               )}
             </div>
+
+            <Pagination
+              page={guestbookPage}
+              totalPages={guestbookTotalPages}
+              onPrevious={() => setGuestbookPage((current) => current - 1)}
+              onNext={() => setGuestbookPage((current) => current + 1)}
+            />
           </div>
         </section>
       </div>
@@ -414,5 +576,110 @@ function SummaryCard({ label, value }: { label: string; value: number }) {
         {value}
       </motion.p>
     </motion.div>
+  );
+}
+
+function SearchInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <div className="mt-5 flex items-center gap-3 rounded-2xl border border-[#ead8bc] bg-white px-4 py-3 transition focus-within:border-[#b58a54]">
+      <Search className="h-4 w-4 text-[#b58a54]" strokeWidth={1.8} />
+      <input
+        type="text"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        className="w-full bg-transparent text-sm outline-none"
+      />
+    </div>
+  );
+}
+
+function FilterPills({
+  value,
+  options,
+  onChange,
+}: {
+  value: string;
+  options: {
+    label: string;
+    value: string;
+  }[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map((option) => {
+        const isActive = value === option.value;
+
+        return (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => onChange(option.value)}
+            className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+              isActive
+                ? "bg-[#2f2a25] text-white"
+                : "border border-[#ead8bc] bg-white text-[#7a6b5e] hover:bg-[#f3e5d3] hover:text-[#2f2a25]"
+            }`}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function Pagination({
+  page,
+  totalPages,
+  onPrevious,
+  onNext,
+}: {
+  page: number;
+  totalPages: number;
+  onPrevious: () => void;
+  onNext: () => void;
+}) {
+  return (
+    <div className="mt-5 flex items-center justify-between gap-3 border-t border-[#ead8bc] pt-4">
+      <button
+        type="button"
+        onClick={onPrevious}
+        disabled={page <= 1}
+        className="rounded-2xl border border-[#d8b989] bg-white px-4 py-2 text-sm font-medium text-[#2f2a25] transition hover:bg-[#f3e5d3] disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        Previous
+      </button>
+
+      <p className="text-sm text-[#7a6b5e]">
+        Page {page} of {totalPages}
+      </p>
+
+      <button
+        type="button"
+        onClick={onNext}
+        disabled={page >= totalPages}
+        className="rounded-2xl border border-[#d8b989] bg-white px-4 py-2 text-sm font-medium text-[#2f2a25] transition hover:bg-[#f3e5d3] disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        Next
+      </button>
+    </div>
+  );
+}
+
+function EmptyState({ text }: { text: string }) {
+  return (
+    <div className="rounded-3xl border border-[#ead8bc] bg-[#fffaf3] p-5 text-sm text-[#7a6b5e]">
+      {text}
+    </div>
   );
 }
