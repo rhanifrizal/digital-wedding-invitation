@@ -2,7 +2,6 @@
 
 import { CheckCircle2, UserRound, UsersRound, XCircle } from "lucide-react";
 import { useState } from "react";
-import { supabase } from "@/lib/supabase/client";
 
 type AttendanceStatus = "attending" | "not_attending";
 
@@ -85,18 +84,30 @@ export function RSVPSheet() {
 
     setIsSubmitting(true);
 
-    const { error } = await supabase.from("rsvps").insert({
-      name: trimmedName,
-      phone: normalizedPhone,
-      attendance_status: form.attendanceStatus,
-      pax_count: form.attendanceStatus === "attending" ? paxCount : 0,
-      message: trimmedMessage || null,
+    const response = await fetch("/api/rsvp", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: trimmedName,
+        phone: normalizedPhone,
+        attendanceStatus: form.attendanceStatus,
+        paxCount: form.attendanceStatus === "attending" ? paxCount : 0,
+        message: trimmedMessage || null,
+      }),
     });
 
     setIsSubmitting(false);
 
-    if (error) {
-      setErrorMessage("Maaf, RSVP tidak berjaya dihantar. Sila cuba lagi.");
+    if (!response.ok) {
+      const result = (await response.json()) as {
+        error?: string;
+      };
+
+      setErrorMessage(
+        result.error || "Maaf, RSVP tidak berjaya dihantar. Sila cuba lagi.",
+      );
       return;
     }
 
